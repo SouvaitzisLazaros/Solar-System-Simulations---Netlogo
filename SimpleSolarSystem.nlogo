@@ -1,82 +1,83 @@
-breed [ planets ]
+breed [ planets planet ]
 
 ;TURTLES' VARIABLES
 
-turtles-own [ 
-  mass 
-  Vx Vy 
-  aX aY 
-  x y 
-  radius avg-radius radius-ratio 
-  y_old 
-  orbitcount 
-  t_label 
+turtles-own [
+  mass
+  Vx Vy
+  aX aY
+  x y
+  radius avg-radius radius-ratio
+  y_old
+  orbitcount
+  t_label
   GForce    ]
 
 ;GLOBAL VARIABLES
 
-globals [ 
-  sun earth mars mercury venus jupiter saturn uranus neptune 
-  time 
-  scale 
+globals [
+  sun earth mars mercury venus jupiter saturn uranus neptune
+  time
+  scale
   G     ]
 
 to setup
-  
+
     display
-   
+
     clear-all
     clear-output
-       
+
     set Zoom 15
     set scale 1
     set scale Zoom * max-pxcor / 150
     set time Speed
-    set G 6.673 * 10 ^ (0 - 11)     ;Gravitation constant in units of newton*m^2/kg^2 converted to units of Astronomical Units, 
+    set G 6.673 * 10 ^ (0 - 11)     ;Gravitation constant in units of newton*m^2/kg^2 converted to units of Astronomical Units,
                                     ;planet masses are measured in earth masses
     crt 1
     create-planets 9                ;turtle 9 is the comet --> might be affected by other planets (Sun, Jupiter, Saturn) if it gets close enough
-                                    
-   
-   
-   
-    ask turtles [set shape "circle"]
-   
-   
+
+
+
+
+    ask planets [set shape "circle"]
+
+
     ;INITIALIZING PLANETS
-   
-   
+
+
     set sun turtle 0
     ask sun [
+        set shape "circle"
         set color yellow + 1
-        set mass 329390 
+        set mass 329390
         set t_label "Sun "
         ;set scale 5
         set size (log 1391900 10) / 2
         ]
-    
-    
+
+
     set mercury turtle 1
     ask mercury [
-        set mass .0549 
+        set mass .0549
         set avg-radius 0.388 / 3
         set t_label "Mer "
         set color brown
-        set size (log 4866 10) / 2 
+        set size (log 4866 10) / 2
         ]
-    
+
     set venus turtle 2
     ask venus [
-        set mass .8073 
+        set mass .8073
         set avg-radius .722 / 3
         set t_label "V "
         set color orange - 1
         set size (log 12106 10) / 2
         ]
-    
+
     set earth turtle 3
     ask earth [
-        set mass 1 
+        set mass 1
         set avg-radius 1.00 / 3
         set t_label "E "
         set color blue
@@ -84,7 +85,7 @@ to setup
         ]
     set mars turtle 4
     ask mars [
-        set mass .1065 
+        set mass .1065
         set avg-radius 1.53 / 2
         set t_label "M "
         set color red
@@ -92,131 +93,131 @@ to setup
         ]
     set jupiter turtle 5
     ask jupiter [
-        set mass 314.5 
+        set mass 314.5
         set avg-radius 5.2 / 3
         set t_label "J "
         set color yellow - 2
         set size (log 142984 10) / 2
         ]
-    
+
     set saturn turtle 6
     ask saturn [
-        set mass 94.07 
+        set mass 94.07
         set avg-radius 9.54 / 3
         set t_label "S "
         set color brown + 2
         set size (log 116438 10) / 2
-        ]    
-    
+        ]
+
     set uranus turtle 7
     ask uranus [
-       set mass 14.536 
+       set mass 14.536
        set avg-radius 19.18 / 3
        set t_label "U "
        set color sky + 1
        set size (log 46940 10) / 2
        ]
-    
+
     set neptune turtle 8
     ask neptune [
-       set mass 17.147 
+       set mass 17.147
        set avg-radius 30.06 / 3
        set t_label "N "
        set color turquoise
        set size (log 45432 10) / 2
        ]
-    
+
     ;comet
     ask turtle 9 [
         set mass Comet_Mass
         set avg-radius Comet_Start          ;comet's initial position at distance from sun specified by the slider
-        set color white 
+        set color white
         set t_label "Com "
-        set x avg-radius 
-        set y 0  
+        set x avg-radius
+        set y 0
         set size (log Comet_Diameter 10) / 2
-        
-                            
+
+
         ]
-    
-    
+
+
    ;INITIAL POSITION & VELOCITY
-  
-                            
+
+
    ;planets are randomly positioned, except for the comet, but at the correct distance from the sun, in Astromonical Units.  Masses are in earth-masses.
-   ;x and y are used for coordinates, and then scaled 
+   ;x and y are used for coordinates, and then scaled
 
     ask planets with [who < 9][
-      
-                ifelse random 2 = 0 
+
+                ifelse random 2 = 0
                     [set x random-float avg-radius]
-                    [set x 0 - random-float avg-radius] 
-                    
-                ifelse random 2 = 0 
+                    [set x 0 - random-float avg-radius]
+
+                ifelse random 2 = 0
                     [set y sqrt (avg-radius ^ 2 - x ^ 2)]
                     [set y 0 - sqrt (avg-radius ^ 2 - x ^ 2)]
                  ]
-    
+
     ask planets [
-      
-                ifelse abs (x * scale) > max-pxcor or abs (y * scale) > max-pxcor 
+
+                ifelse abs (x * scale) > max-pxcor or abs (y * scale) > max-pxcor
                     [set hidden? true setxy x * scale y * scale]
                     [set hidden? false setxy x * scale y * scale]
-                ] 
+                ]
 
     ask planets [set radius sqrt(x ^ 2 + y ^ 2) ]
-    
-    
-    ifelse ViewLabels = false 
+
+
+    ifelse ViewLabels = false
         [ask turtles [set label ""]]
         [ask planets [set label t_label]]
 
-    
-        
-    
+
+
+
     ;initial velocity : a = v^2/r for tangential velocity and a = -G*M/r^2. Solve for V at x = r.  Then V = -sqrt(G*M/r).
     ask planets with [who < 9][
-      
+
         set Vy sqrt (([mass] of sun * G) / radius) * sin ((towards-nowrap sun) - 180)         ;to get the correct sign of V for every quadrant we use :
         set Vx 0 - sqrt (([mass] of sun * G) / radius) * cos ((towards-nowrap sun) - 180)     ;sin ((towards-nowrap sun) - 180) and cos ((towards-nowrap sun) - 180)
          ]
-         
+
     ask turtle 9 [
         set Vx 0    ;We suppose the initial Vx = 0
-                           
-        ;Vx = 0 ---> always at -90 degrees due to Sun, so always: sin ((towards-nowrap sun) - 180) = -270           
-        ;Higher Comet_Ellipticity --> more elliptical orbit       
-        set Vy sqrt (([mass] of sun * G) / radius) * sin (-270) * ((100 - Comet_Ellipticity) / 100) 
+
+        ;Vx = 0 ---> always at -90 degrees due to Sun, so always: sin ((towards-nowrap sun) - 180) = -270
+        ;Higher Comet_Ellipticity --> more elliptical orbit
+        set Vy sqrt (([mass] of sun * G) / radius) * sin (-270) * ((100 - Comet_Ellipticity) / 100)
             ]
-         
-        ;compute acceleration in x and y directions due to sun's gravity 
+
+        ;compute acceleration in x and y directions due to sun's gravity
     ask planets [
-      
-        set aX 0 - ((x * [mass] of sun * G) / radius ^ 3) 
+
+        set aX 0 - ((x * [mass] of sun * G) / radius ^ 3)
         set aY 0 - ((y * [mass] of sun * G) / radius ^ 3)
          ]
-         
+
         ;compute acceleration in x and y directions due to gravities of other planets
-    
+
                 ask planets [
-                  
+
                     ask planets with [who != [who] of myself] [
-                      
+
                         set aX [aX] of myself - (((mass * G ) * ([x] of myself - x))/(sqrt ( (x - [x] of myself ) ^ 2 + (y - [y] of myself) ^ 2)) ^ 3)
                         set aY [aY] of myself - (((mass * G ) * ([y] of myself - y))/(sqrt ( (x - [x] of myself ) ^ 2 + (y - [y] of myself) ^ 2)) ^ 3)
                                                               ]
                             ]
-                 
-      
+
+
     ;we use average velocity, with acceleration applied for t/2 seconds.
-    
+
     ask planets [
-                set Vx Vx + aX * time / 2 
+                set Vx Vx + aX * time / 2
                 set Vy Vy + aY * time / 2
                 ]
-                
+
     initial_Plots
-    
+
     reset-ticks
 end
 
@@ -232,106 +233,105 @@ end
 
 to IsRuning
     set scale Zoom * max-pxcor / 150
-    
+
     ;compute new positions for all orbiting bodies
-    ask planets [                                
-                set x x + Vx * time  
+    ask planets [
+                set x x + Vx * time
                 set y y + Vy * time
-                
-                
+
+
      ;hide turtle IF new position is off-screen
-                ifelse abs (x * scale) > max-pxcor or abs (y * scale) > max-pxcor 
-                    
+                ifelse abs (x * scale) > max-pxcor or abs (y * scale) > max-pxcor
+
                     [set hidden? true]
-                    [set hidden? false 
+                    [set hidden? false
                      setxy x * scale y * scale]
-                    
-                    
+
+
                 set radius sqrt(x ^ 2 + y ^ 2)
-                
+
      ;new accelerations based on sun's gravity
-                set aX 0 - ((x * [mass] of sun * G) / radius ^ 3) 
+                set aX 0 - ((x * [mass] of sun * G) / radius ^ 3)
                 set aY 0 - ((y * [mass] of sun * G) / radius ^ 3)
                 ]
-    
-     
+
+
      ;compute new velocities
-    ask planets [        
-                set Vx Vx + aX * time 
+    ask planets [
+                set Vx Vx + aX * time
                 set Vy Vy + aY * time
                 ]
-                
-                
-                
-     ;on/off visible labels           
-    ifelse ViewLabels = false                     
+
+
+
+     ;on/off visible labels
+    ifelse ViewLabels = false
         [ask turtles [set label ""]]
         [ask planets [set label t_label]]
-        
-  
-    
+
+
+
      ;keep track of number of orbits each planet makes
-    ask planets [               
-        if y_old < 0 and y > 0 
+    ask planets [
+        if y_old < 0 and y > 0
             [set orbitcount orbitcount + 1]
              set y_old y
                 ]
-                
-   
-    
+
+
+
     ;keeping track of ratio of current radius to initial average radius for comet and earth. These are beeing used for the plots below.
     ask earth [set radius-ratio ((radius  / (avg-radius)))]
     ask turtle 9 [set radius-ratio ((radius  / (avg-radius)))]
-    
+
     ask turtle 9 [set GForce (mass * 329390 * G ) / (radius-ratio ^ 2)]
 
     if Plotting = true [PlotSetup]
-end         
-         
-         
-         
-;PLOTTING PROCEDURES         
-            
+end
+
+
+
+;PLOTTING PROCEDURES
+
 to PlotSetup
-  
+
   set-current-plot "Comet - Sun Distance"
   ask turtle 9 [set-current-plot-pen "radius-ratio turtle 9"]
   ask turtle 9 [plot radius-ratio]
-  
+
   set-current-plot "Comet - Earth Distance"
   ask turtle 9 [set-current-plot-pen "comet-earth"]
   ask turtle 9 [plot [radius-ratio] of turtle 9 - [radius-ratio] of Earth ]
-  
+
   set-current-plot "Comet - GForce"
   ask turtle 9 [set-current-plot-pen "Gforce turtle 9"]
   ask turtle 9 [plot GForce]
-  
+
 end
 
 
 to initial_Plots
-  
+
   set-current-plot "Comet - Sun Distance"
   set-plot-y-range 0 1.2
   set-plot-x-range 0 1000
-  
+
   set-current-plot "Comet - Earth Distance"
   set-plot-y-range 0 1.2
   set-plot-x-range 0 1000
-  
-  
+
+
 end
 
 
-               
 @#$#@#$#@
 GRAPHICS-WINDOW
 422
 10
-1116
-725
-85
-85
+1114
+703
+-1
+-1
 4.0
 1
 10
@@ -435,7 +435,7 @@ Zoom
 Zoom
 1
 100
-15
+15.0
 1
 1
 NIL
@@ -450,7 +450,7 @@ Speed
 Speed
 1
 10
-3
+2.0
 1
 1
 NIL
@@ -474,9 +474,9 @@ SLIDER
 251
 Comet_Ellipticity
 Comet_Ellipticity
-0
+0.01
 100
-71
+0.01
 1
 1
 NIL
@@ -491,7 +491,7 @@ Comet_Start
 Comet_Start
 1.6
 40
-17.3
+1.6
 0.1
 1
 AU
@@ -506,7 +506,7 @@ Comet_Diameter
 Comet_Diameter
 1000
 4000
-1150
+3800.0
 50
 1
 NIL
@@ -568,7 +568,7 @@ Comet_Mass
 Comet_Mass
 0.003
 50
-0.653
+0.0
 0.05
 1
 NIL
@@ -609,7 +609,6 @@ Plots/Monitors
 
 Αρχικά έχουμε τρεις μετρητές (monitors) οι οποίοι μετράνε το σύνολο των τροχιών (έτη) τριών χαρακτηριστικών πλανητών, της Γης, του Δία και του Ποσειδώνα. Η επιλογή αυτών έγινε για να είναι αισθητή η διαφορά του χρόνου περιστροφής του πλανήτη μας με σε σχέση με τον Δία που βρίσκεται σε μια μέση απόσταση από τον Ήλιο και του Ποσειδώνα που είναι ο πιο απομακρυσμένος πλανήτης του ηλιακού μας συστήματος.
 Έπειτα ακολουθούν τα διαγράμματα που αφορούν τον κομήτη. Το 1ο διάγραμμα «Comet – Earth Distance» απεικονίζει το ρυθμό μεταβολής της απόστασης του κομήτη από τη Γη σε σχέση με την αρχική τους απόσταση. Το 2ο διάγραμμα «Comet – Sun Distance» απεικονίζει το ρυθμό μεταβολής της απόστασης του κομήτη από τον Ήλιο και πάλι σε σχέση με την αρχική απόσταση μεταξύ τους. Το 3ο διάγραμμα «Comet GForce» παρουσιάζει την μεταβολή στη βαρυτική δύναμη που δημιουργείται από τον ‘Ηλιο και τον κομήτη. 
-
 
 
 
@@ -849,9 +848,8 @@ Line -16777216 false 58 211 67 192
 Polygon -6459832 true true 38 138 66 149
 Polygon -6459832 true true 46 128 33 120 21 118 11 123 3 138 5 160 13 178 9 192 0 199 20 196 25 179 24 161 25 148 45 140
 Polygon -6459832 true true 67 122 96 126 63 144
-
 @#$#@#$#@
-NetLogo 5.0.5
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -867,7 +865,6 @@ true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
-
 @#$#@#$#@
 0
 @#$#@#$#@
