@@ -140,6 +140,7 @@ to setup
 
     ;----------------------------------------------------------------------------------
     ; we can play with these but not useful for the asteroids study at this point
+    ; maybe at a future work : combination of comets-asteroids interaction
     ;----------------------------------------------------------------------------------
     ;set uranus turtle 7
     ;ask uranus [
